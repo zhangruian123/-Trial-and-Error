@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEngine.GraphicsBuffer;
 
 public class Round_C : MonoBehaviour
 {
@@ -10,30 +11,64 @@ public class Round_C : MonoBehaviour
      */
 
     private int round = 1;  //回合数
+    private int last_player = 1;  //上次出手角色
     private Button[] allButtons;  //所有按钮 
     public GameObject Canvas;
 
     float timer = 0f;  
     bool isWaiting = false;  //计时器
+    string event_name = "";  //计时器结束后触发的事件
 
     public void next_round()
     {
+        //show_hp_for_debug();
         round = round + 1;
         Canvas.GetComponent<RoundText_C>().change_round_text(round);  //改变回合文本
-        button_control();  //控制按钮状态，敌方回合时禁用按钮
+        
+        if (round % 2 == 1)
+        {
+            //我方回合时，切换下一个玩家
+            Canvas.GetComponent<Button1_C>().change_player(next_player());  
+        }
+
+        button_control();  //控制按钮状态，敌方回合时禁用按钮，我方回合时启用
 
         //敌方回合时，自动控制敌人出招
         if (round % 2 == 0)
         {
-            GameObject Enemy = GameObject.Find("Enemy");
-            if (Enemy == null ) { return; }  //若敌人已死则直接结束
-            Enemy.GetComponent<Enemy_C>().ability1();  //否则，调用敌人技能
-            timer = 1.2f;
-            isWaiting = true;  //在敌人放完技能 1.2s 后到下一回合
+            GameObject Enemy = GameObject.Find("Enemy1");
+            if (Enemy == null) { event_name = ""; return; }  //若敌人已死则直接结束
+            Enemy.GetComponent<Enemy_C>().movement();  //否则，调用敌人技能
+            set_timer(1.2f, "next");  //1s后下一回合
         }
     }
 
     public int show_round() { return round; }
+
+    public int next_player()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            int next_index = last_player + 1;
+            if(next_index > 3) next_index -= 3;
+            last_player = next_index;
+
+            GameObject next_player = GameObject.Find($"Player{next_index}");
+            if (next_player != null )
+            {
+                return next_index;
+            }
+        }
+        Debug.Log("Can't Find Player!");
+        return -1;
+    }
+
+    void set_timer(float value, string str)
+    {
+        timer = value;
+        isWaiting = true;
+        event_name = str;
+    }
 
     void Start()
     {
@@ -50,7 +85,11 @@ public class Round_C : MonoBehaviour
             {
                 timer = 0f;
                 isWaiting = false;
-                next_round();
+                if (event_name == "next")
+                {
+                    next_round();
+                }
+                event_name = "";
             }
         }
     }
@@ -86,5 +125,26 @@ public class Round_C : MonoBehaviour
                 button.interactable = false;
             }
         }
-    }  
+    }
+
+    public void show_hp_for_debug()
+    {
+        
+        Debug.Log($"after round{round}:");
+        for (int i = 1; i <= 3; i++)
+        {
+            GameObject target = GameObject.Find($"Player{i}");
+            if (target != null)
+            {
+                int target_hp = target.GetComponent<Player_C>().show_hp();
+                Debug.Log($"the hp of Player{i} is {target_hp}");
+            }
+        }
+        GameObject enemy = GameObject.Find("Enemy1");
+        if (enemy != null)
+        {
+            int target_hp = enemy.GetComponent<Enemy_C>().show_hp();
+            Debug.Log($"the hp of Enemy is {target_hp}");
+        }
+    }
 }

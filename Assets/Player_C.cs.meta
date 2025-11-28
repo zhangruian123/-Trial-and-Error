@@ -3,7 +3,12 @@ guid: Dikdtyr7By2wRA4NMvr9WIhCtg75gKZjm8UVXXiPg2iprZtudSBshQY=
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - HP: {instanceID: 0}
+  - HP_down: {instanceID: 0}
+  - Power: {instanceID: 0}
+  - Fire_prefab: {instanceID: 0}
+  - Fire: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
